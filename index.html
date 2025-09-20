@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hacking Interface — Demo</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#071018;
+      --text:#a8ffea;
+      --accent:#39ff14;
+      --muted:#6b7780;
+      --mono: "Courier New", Courier, monospace;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      background: radial-gradient(ellipse at 20% 10%, rgba(57,255,20,0.03), transparent 8%),
+                  radial-gradient(ellipse at 80% 90%, rgba(168,255,234,0.02), transparent 10%),
+                  var(--bg);
+      font-family:var(--mono);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .wrap{
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      box-sizing:border-box;
+    }
+
+    .terminal{
+      width:min(920px,94%);
+      max-width:1000px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.006));
+      border:1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 10px 40px rgba(2,6,10,0.7);
+      border-radius:10px;
+      padding:28px;
+      box-sizing:border-box;
+      position:relative;
+    }
+
+    .titlebar{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-bottom:12px;
+    }
+
+    .dot { width:12px; height:12px; border-radius:50%; }
+    .red{ background:#ff5f56; box-shadow:0 0 8px rgba(255,95,86,0.12);}
+    .yellow{ background:#ffbd2e; box-shadow:0 0 8px rgba(255,189,46,0.08);}
+    .green{ background:#27c93f; box-shadow:0 0 8px rgba(39,201,63,0.06);}
+
+    .screen{
+      background:linear-gradient(180deg, rgba(3,6,9,0.85), rgba(7,16,24,0.95));
+      border-radius:8px;
+      padding:18px;
+      min-height:320px;
+      box-sizing:border-box;
+      color:var(--text);
+      overflow:hidden;
+    }
+
+    .lines{ font-size:18px; line-height:1.6; white-space:pre-wrap; }
+
+    .prompt{
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:8px;
+    }
+
+    .loader-dots{
+      display:inline-block;
+      width:24px;
+      text-align:left;
+    }
+
+    .loader-dots span{
+      display:inline-block;
+      width:6px;
+      height:6px;
+      margin-right:4px;
+      border-radius:50%;
+      background:var(--muted);
+      opacity:0.25;
+      animation:blink 1s infinite;
+    }
+    .loader-dots span:nth-child(1){ animation-delay:0s; }
+    .loader-dots span:nth-child(2){ animation-delay:0.15s; }
+    .loader-dots span:nth-child(3){ animation-delay:0.3s; }
+
+    @keyframes blink {
+      0%{ opacity:0.18; transform:translateY(0); }
+      50%{ opacity:1; transform:translateY(-4px); }
+      100%{ opacity:0.18; transform:translateY(0); }
+    }
+
+    .typing {
+      display:inline-block;
+      border-right:2px solid rgba(168,255,234,0.9);
+      padding-right:6px;
+      animation:caret 1s steps(1) infinite;
+    }
+    @keyframes caret{
+      50%{ border-color:transparent; }
+      100%{ border-color:rgba(168,255,234,0.9); }
+    }
+
+    .line {
+      opacity:0;
+      transform:translateY(6px);
+      transition: all 260ms cubic-bezier(.2,.9,.2,1);
+    }
+    .line.show{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    .final {
+      margin-top:18px;
+      padding:12px;
+      background:rgba(57,255,20,0.03);
+      border-left:4px solid var(--accent);
+      color:var(--accent);
+      font-weight:700;
+      letter-spacing:0.8px;
+      border-radius:4px;
+      display:inline-block;
+      font-size:20px;
+    }
+
+    /* small screens */
+    @media (max-width:520px){
+      .lines{ font-size:15px; }
+      .final{ font-size:18px; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="terminal" role="region" aria-label="Hacking interface mock terminal">
+      <div class="titlebar" aria-hidden="true">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+        <div style="margin-left:auto;color:var(--muted);font-size:13px;">HACK-TERMINAL v1.0</div>
+      </div>
+
+      <div class="screen">
+        <div class="prompt">~ root@system:~$ running sequence</div>
+        <div class="lines" id="lines" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sequence: each step has a label (what to type) and an optional 'pauseAfter' in ms.
+    // The phone/place/name values come from user request — modify below if you want to change them.
+    const sequence = [
+      { type: "loading", text: "Loading", pauseAfter: 900 },
+      { type: "reveal", text: "Name:Gokul Menon", pauseAfter: 1200 },
+      { type: "loading", text: "Loading", pauseAfter: 900 },
+      { type: "reveal", text: "Mobile:7994637770", pauseAfter: 1400 },
+      { type: "loading", text: "Loading", pauseAfter: 900 },
+      { type: "reveal", text: "Location: Palakkad", pauseAfter: 1200 },
+      { type: "final", text: "YOU ARE HACKED", pauseAfter: 0 }
+    ];
+
+    const linesEl = document.getElementById("lines");
+
+    // Typewriter function — types characters one by one into an element
+    function typeWrite(el, text, speed = 28) {
+      return new Promise(resolve => {
+        el.textContent = "";
+        let i = 0;
+        function step(){
+          if(i < text.length){
+            el.textContent += text[i++];
+            setTimeout(step, speed + Math.random()*18);
+          } else {
+            resolve();
+          }
+        }
+        step();
+      });
+    }
+
+    // Create loader element (three animated dots)
+    function createLoader(){
+      const span = document.createElement("span");
+      span.className = "line";
+      span.innerHTML = `<span style="color:var(--muted)"></span><span class="loader-dots" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>`;
+      return span;
+    }
+
+    // Append a revealed text line with typing effect
+    async function appendReveal(text){
+      const el = document.createElement("div");
+      el.className = "line";
+      el.setAttribute("role","text");
+      // prompt + typed text
+      el.innerHTML = `<span style="color:var(--muted)">~></span> <span class="typing" aria-hidden="true"></span>`;
+      linesEl.appendChild(el);
+      // ensure layout
+      requestAnimationFrame(()=> el.classList.add("show"));
+      const typingSpan = el.querySelector(".typing");
+      await typeWrite(typingSpan, " " + text, 28);
+      // remove caret after finishing
+      typingSpan.classList.remove("typing");
+      return el;
+    }
+
+    // Run the sequence
+    (async function runSequence(){
+      for(let step of sequence){
+        if(step.type === "loading"){
+          // show loader, wait, remove loader
+          const loader = createLoader();
+          linesEl.appendChild(loader);
+          requestAnimationFrame(()=> loader.classList.add("show"));
+          await new Promise(r => setTimeout(r, step.pauseAfter));
+          loader.remove();
+        } else if(step.type === "reveal"){
+          await appendReveal(step.text);
+          await new Promise(r => setTimeout(r, step.pauseAfter));
+        } else if(step.type === "final"){
+          // final emphasized line
+          const el = document.createElement("div");
+          el.className = "line show";
+          el.style.marginTop = "14px";
+          el.innerHTML = `<div class="final" role="status" aria-live="polite">${step.text}</div>`;
+          linesEl.appendChild(el);
+          // small scroll into view
+          el.scrollIntoView({behavior:"smooth", block:"end"});
+        }
+        // keep scroll at bottom
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      }
+    })();
+
+    // Accessibility: allow pressing space or Enter to replay quickly
+    document.addEventListener('keydown', (e) => {
+      if(e.key === " " || e.key === "Enter"){
+        location.reload();
+      }
+    });
+  </script>
+</body>
+</html>
